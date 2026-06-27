@@ -1,0 +1,56 @@
+.titlebar {
+  height: 40px;
+  background: var(--titlebar);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 12px 0 16px;
+  -webkit-app-region: drag;
+  user-select: none;
+  flex-shrink: 0;
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.titlebar-logo {
+  font-size: 16px;
+}
+
+.titlebar-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sec);
+}
+
+.titlebar-controls {
+  display: flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.ctrl-btn {
+  width: 36px;
+  height: 28px;
+  border-radius: 6px;
+  color: var(--text-sec);
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s;
+}
+
+.ctrl-btn:hover {
+  background: var(--card-hover);
+  color: var(--text);
+}
+
+.ctrl-btn.close:hover {
+  background: var(--danger);
+  color: white;
+}

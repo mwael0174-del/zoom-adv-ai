@@ -1,0 +1,230 @@
+/* ══════════════════════════════════════════
+   Integrations Page
+   ══════════════════════════════════════════ */
+
+/* summary bar */
+.plat-summary {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 24px;
+  margin-bottom: 24px;
+}
+.plat-summary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.plat-summary-num {
+  font-size: 28px;
+  font-weight: 800;
+  line-height: 1;
+  color: var(--primary);
+}
+.plat-summary-label {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.plat-summary-note {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-muted);
+  padding: 8px 14px;
+  background: var(--bg);
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* grid */
+.plat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+/* card */
+.plat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 22px;
+  transition: border-color 0.2s;
+}
+.plat-card--connected {
+  border-color: var(--primary);
+}
+
+.plat-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.plat-logo {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+}
+.plat-info { flex: 1; }
+.plat-title {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 3px;
+}
+.plat-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+.status-on  { color: var(--success); }
+.status-off { color: var(--text-muted); }
+
+.plat-disconnect {
+  font-size: 12px;
+  padding: 6px 12px;
+  color: var(--danger);
+  border-color: var(--danger);
+}
+.plat-disconnect:hover {
+  background: rgba(248,113,113,0.1);
+}
+
+/* connected account info */
+.plat-account {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--border);
+}
+.plat-account-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--success);
+}
+.plat-account-id {
+  font-size: 12px;
+  color: var(--text-muted);
+  direction: ltr;
+  text-align: right;
+}
+
+/* form */
+.plat-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.plat-form label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-sec);
+}
+.plat-form input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: 13px;
+  font-family: inherit;
+  transition: border-color 0.2s;
+}
+.plat-form input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+.plat-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+/* error */
+.plat-error {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--danger);
+  padding: 8px 12px;
+  background: rgba(248,113,113,0.08);
+  border-radius: 8px;
+  border: 1px solid rgba(248,113,113,0.2);
+}
+
+/* guide */
+.plat-guide {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+}
+.plat-guide-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 24px;
+  margin-top: 16px;
+}
+.plat-guide-step {
+  display: flex;
+  gap: 14px;
+}
+.plat-guide-logo {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: grid;
+  place-items: center;
+  font-size: 1rem;
+  font-weight: 800;
+  color: #fff;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.plat-guide-step strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+.plat-guide-step ol {
+  padding-right: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.plat-guide-step li {
+  font-size: 12px;
+  color: var(--text-sec);
+  line-height: 1.5;
+}
+.plat-guide-step a {
+  color: var(--primary);
+  text-decoration: none;
+}
+.plat-guide-step a:hover { text-decoration: underline; }
+.plat-guide-step code {
+  font-family: monospace;
+  background: var(--bg);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--warning);
+}
+
+@media (max-width: 768px) {
+  .plat-grid { grid-template-columns: 1fr; }
+  .plat-summary { flex-wrap: wrap; gap: 16px; }
+  .plat-summary-note { margin-right: 0; width: 100%; }
+}

@@ -1,0 +1,62 @@
+{
+  "name": "zoom-adv-ai",
+  "version": "1.0.0",
+  "description": "Smart Advertising Management Powered by AI",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite --port 5173 --strictPort",
+    "build": "vite build --base ./ --outDir dist --emptyOutDir",
+    "electron:dev": "concurrently \"vite --port 5173 --strictPort\" \"wait-on http://localhost:5173 && cross-env NODE_ENV=development electron .\"",
+    "start": "npm run electron:dev",
+    "electron:build": "vite build --base ./ --outDir dist --emptyOutDir && electron-builder",
+    "make:shortcut": "electron electron/create-shortcut.js"
+  },
+  "build": {
+    "appId": "com.zoomadvai.app",
+    "productName": "Zoom Adv AI",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "build/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Zoom Adv AI"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "build/icon.icns"
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "build/icon.png",
+      "desktop": {
+        "Name": "Zoom Adv AI",
+        "Comment": "AI Ad Campaign Manager",
+        "Categories": "Office;Finance"
+      }
+    }
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^4.2.0",
+    "concurrently": "^8.2.0",
+    "cross-env": "^7.0.3",
+    "electron": "^42.5.0",
+    "electron-builder": "^24.9.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "vite": "^5.0.0",
+    "wait-on": "^7.2.0"
+  }
+}
