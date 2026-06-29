@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Campaigns from './pages/Campaigns';
 import AIAssistant from './pages/AIAssistant';
 import Analytics from './pages/Analytics';
+import Targeting from './pages/Targeting';
 import Integrations from './pages/Integrations';
 import Quotation from './pages/Quotation';
 import Landing from './pages/Landing';
@@ -16,6 +17,7 @@ const PAGES = {
   campaigns:    Campaigns,
   ai:           AIAssistant,
   analytics:    Analytics,
+  targeting:    Targeting,
   integrations: Integrations,
   quotation:    Quotation,
 };

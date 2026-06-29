@@ -6,6 +6,7 @@ const NAV = [
   { id: 'quotation',    label: 'العروض السعرية', icon: '💬' },
   { id: 'ai',           label: 'مساعد AI',     icon: 'AI' },
   { id: 'analytics',   label: 'التحليلات',    icon: '⌁' },
+  { id: 'targeting',   label: 'الاستهداف الذكي', icon: '⌖' },
   { id: 'integrations',label: 'ربط المنصات',  icon: '⇆' },
 ];
 
