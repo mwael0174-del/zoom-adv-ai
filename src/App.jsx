@@ -6,6 +6,7 @@ import Campaigns from './pages/Campaigns';
 import AIAssistant from './pages/AIAssistant';
 import Analytics from './pages/Analytics';
 import Integrations from './pages/Integrations';
+import Quotation from './pages/Quotation';
 import Landing from './pages/Landing';
 import { CampaignsProvider } from './context/CampaignsContext';
 import './App.css';
@@ -16,6 +17,7 @@ const PAGES = {
   ai:           AIAssistant,
   analytics:    Analytics,
   integrations: Integrations,
+  quotation:    Quotation,
 };
 
 export default function App() {

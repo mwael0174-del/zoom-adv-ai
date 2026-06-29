@@ -3,7 +3,8 @@ import './Sidebar.css';
 const NAV = [
   { id: 'dashboard',    label: 'لوحة التحكم', icon: '▦' },
   { id: 'campaigns',    label: 'الحملات',      icon: '◉' },
-  { id: 'ai',          label: 'مساعد AI',     icon: 'AI' },
+  { id: 'quotation',    label: 'العروض السعرية', icon: '💬' },
+  { id: 'ai',           label: 'مساعد AI',     icon: 'AI' },
   { id: 'analytics',   label: 'التحليلات',    icon: '⌁' },
   { id: 'integrations',label: 'ربط المنصات',  icon: '⇆' },
 ];
