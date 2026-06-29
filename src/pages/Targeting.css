@@ -1,0 +1,302 @@
+/* ── إشعار الربط ─────────────────────────────────────────────── */
+.targeting-notice {
+  background: var(--primary-dim);
+  border: 1px solid rgba(0, 196, 167, 0.25);
+  color: var(--text-sec);
+  border-radius: 12px;
+  padding: 14px 18px;
+  font-size: 13px;
+  margin-bottom: 22px;
+}
+.targeting-notice strong { color: var(--primary); }
+
+/* ── التبويبات ───────────────────────────────────────────────── */
+.targeting-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 14px;
+}
+
+.targeting-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+  background: var(--card);
+  transition: all 0.18s;
+}
+
+.targeting-tab:hover {
+  color: var(--text);
+  border-color: var(--text-muted);
+}
+
+.targeting-tab.active {
+  background: var(--primary);
+  color: #0a0f0e;
+  border-color: var(--primary);
+}
+
+.targeting-tab-icon {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.9;
+}
+
+/* ── عنوان القسم ─────────────────────────────────────────────── */
+.section-title { margin-bottom: 18px; }
+.section-title h3 { font-size: 18px; font-weight: 700; margin-bottom: 4px; }
+.section-title p { color: var(--text-sec); font-size: 13px; line-height: 1.6; }
+
+/* ── حقول الإدخال ────────────────────────────────────────────── */
+.field {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-sec);
+  margin-bottom: 14px;
+}
+.field-inline {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+}
+.field-inline span { white-space: nowrap; }
+.field select,
+.field input {
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: #121622;
+  color: var(--text);
+  font-size: 14px;
+  min-width: 160px;
+}
+.field select:focus,
+.field input:focus { outline: none; border-color: var(--primary); }
+
+/* ── 1) السلوكي ──────────────────────────────────────────────── */
+.seg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+}
+.seg-head { display: flex; align-items: center; justify-content: space-between; }
+.seg-pct { font-size: 14px; font-weight: 700; color: var(--text-sec); }
+.seg-audience { font-size: 30px; font-weight: 700; margin-top: 14px; letter-spacing: -0.02em; }
+.seg-audience-label { font-size: 12px; color: var(--text-muted); margin-bottom: 14px; }
+.seg-bar {
+  height: 8px;
+  background: var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.seg-bar-fill { height: 100%; border-radius: 6px; transition: width 0.4s; }
+.seg-success { background: var(--success); }
+.seg-warning { background: var(--warning); }
+.seg-muted { background: var(--text-muted); }
+
+/* ── 2) الجغرافي ─────────────────────────────────────────────── */
+.geo-list { display: flex; flex-direction: column; gap: 16px; }
+.geo-row {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+.geo-name { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14px; }
+.geo-rank {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--primary-dim);
+  color: var(--primary);
+  font-size: 12px;
+  font-weight: 700;
+}
+.geo-track {
+  position: relative;
+  height: 26px;
+  background: var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.geo-fill { height: 100%; background: var(--primary); border-radius: 8px; transition: width 0.4s; }
+.geo-activity {
+  position: absolute;
+  inset-inline-start: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  font-weight: 700;
+  color: #0a0f0e;
+}
+.geo-meta { display: flex; gap: 14px; font-size: 12px; color: var(--text-sec); white-space: nowrap; }
+.geo-peak { color: var(--accent); }
+
+@media (max-width: 760px) {
+  .geo-row { grid-template-columns: 1fr; gap: 8px; }
+  .geo-meta { flex-wrap: wrap; }
+}
+
+/* ── 3) تنبؤ AI ──────────────────────────────────────────────── */
+.ai-note {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin-top: 8px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.ai-result { display: flex; flex-direction: column; }
+.ai-confidence {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--primary-dim);
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 13px;
+  color: var(--text-sec);
+}
+.ai-confidence strong { font-size: 22px; color: var(--primary); }
+.ai-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.ai-meta-grid > div {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.ai-meta-grid span { font-size: 12px; color: var(--text-muted); }
+.ai-meta-grid strong { font-size: 18px; }
+.ai-interests span { font-size: 12px; color: var(--text-muted); }
+
+/* رقاقات (chips) */
+.chip-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--card-hover);
+  color: var(--text-sec);
+  border: 1px solid var(--border);
+}
+.chip-affinity { background: var(--primary-dim); color: var(--primary); border: none; }
+.chip-best { background: rgba(255, 107, 74, 0.15); color: var(--accent); border: none; }
+.chip-roas { background: rgba(52, 211, 153, 0.15); color: var(--success); border: none; }
+
+/* ── 4) الاهتمامات الدقيقة ───────────────────────────────────── */
+.interest-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.interest-row {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--border);
+}
+.interest-row:last-child { border-bottom: none; }
+.interest-name { font-size: 13px; }
+.interest-size { font-size: 12px; color: var(--text-muted); }
+
+/* ── 5) الزمني (heatmap) ─────────────────────────────────────── */
+.time-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+.time-legend { display: flex; align-items: center; gap: 10px; font-size: 11px; color: var(--text-muted); }
+.legend-bar {
+  width: 80px; height: 8px; border-radius: 5px;
+  background: linear-gradient(to left, rgba(0,196,167,0.9), rgba(0,196,167,0.08));
+}
+.heatmap { display: flex; flex-direction: column; gap: 6px; overflow-x: auto; }
+.heatmap-row { display: grid; grid-template-columns: 70px repeat(6, 1fr); gap: 6px; }
+.heatmap-col-label, .heatmap-day {
+  font-size: 11px; color: var(--text-muted);
+  display: flex; align-items: center; justify-content: center;
+}
+.heatmap-day { justify-content: flex-start; font-weight: 600; color: var(--text-sec); }
+.heatmap-cell {
+  height: 38px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text);
+  min-width: 44px;
+}
+.time-best {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.time-best-label { font-size: 13px; color: var(--text-sec); font-weight: 600; }
+
+/* ── 6) الأجهزة ──────────────────────────────────────────────── */
+.device-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.device-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.device-name { font-size: 15px; font-weight: 600; }
+.device-pct { font-size: 22px; font-weight: 700; color: var(--primary); }
+.device-ctr { font-size: 13px; color: var(--text-sec); margin-top: 12px; }
+.device-ctr strong { color: var(--text); }
+.device-tip { font-size: 12px; color: var(--text-muted); line-height: 1.6; margin-top: 8px; }
+
+/* ── 7) الميزانية ────────────────────────────────────────────── */
+.alloc-list { display: flex; flex-direction: column; gap: 14px; }
+.alloc-row {
+  display: grid;
+  grid-template-columns: 180px 1fr auto;
+  align-items: center;
+  gap: 16px;
+}
+.alloc-info { display: flex; flex-direction: column; gap: 2px; }
+.alloc-name { font-size: 14px; font-weight: 600; }
+.alloc-platform { font-size: 11px; color: var(--text-muted); }
+.alloc-track { height: 22px; background: var(--border); border-radius: 8px; overflow: hidden; }
+.alloc-fill { height: 100%; background: var(--primary); border-radius: 8px; transition: width 0.4s; }
+.alloc-numbers { display: flex; align-items: center; gap: 10px; }
+.alloc-amount { font-size: 15px; font-weight: 700; }
+
+@media (max-width: 760px) {
+  .alloc-row { grid-template-columns: 1fr; gap: 8px; }
+}
