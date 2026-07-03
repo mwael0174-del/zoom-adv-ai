@@ -6,7 +6,7 @@ export default function TitleBar() {
   return (
     <header className="titlebar">
       <div className="titlebar-brand">
-        <span className="titlebar-logo">⚡</span>
+        <span className="titlebar-logo">▶</span>
         <span className="titlebar-name">Zoom Adv AI</span>
       </div>
       <div className="titlebar-controls">
