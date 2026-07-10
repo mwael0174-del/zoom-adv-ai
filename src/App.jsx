@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Analytics as VercelAnalytics } from '@vercel/analytics/react';
 import TitleBar from './components/TitleBar';
 import Sidebar from './components/Sidebar';
 import Dashboard from './pages/Dashboard';
@@ -37,6 +38,7 @@ export default function App() {
             </main>
           </div>
         </div>
+        <VercelAnalytics />
       </CampaignsProvider>
     );
   }
@@ -52,6 +54,7 @@ export default function App() {
           </main>
         </div>
       </div>
+      <VercelAnalytics />
     </CampaignsProvider>
   );
 }
