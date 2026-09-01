@@ -12,6 +12,8 @@ const config = {
   timeoutMs: Number(process.env.OPENAI_TIMEOUT_MS || 60000),
   baseUrl: process.env.OPENAI_BASE_URL || undefined,
   authToken: process.env.BRAIN_API_TOKEN || '',
+  rateWindowMs: Number(process.env.RATE_WINDOW_MS || 60000),
+  rateMax: Number(process.env.RATE_MAX || 30),
 };
 
 const memory = new MemoryStore(process.env.MEMORY_FILE || path.join(rootDir, 'data', 'memory.json'));

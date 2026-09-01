@@ -10,6 +10,11 @@ const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 
 const unauthorized = (res) =>
   res.status(401).json({ success: false, errorCode: 'UNAUTHORIZED', message: 'مطلوب توكن صالح.' });
 
+const tooManyRequests = (res) =>
+  res
+    .status(429)
+    .json({ success: false, errorCode: 'RATE_LIMITED', message: 'طلبات كتير في وقت قصير، حاول كمان شوية.' });
+
 const memoryError = (res) =>
   res.status(500).json({ success: false, errorCode: 'MEMORY_ERROR', message: 'تعذر قراءة ذاكرة المشروع.' });
 
@@ -33,6 +38,19 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     next();
   };
 
+  // حد بسيط للطلبات لكل IP: يمنع استنزاف كوتا الـ AI وتضخم ملف الذاكرة.
+  const hits = new Map();
+  const rateLimit = (req, res, next) => {
+    const now = Date.now();
+    const key = req.ip;
+    const recent = (hits.get(key) || []).filter((t) => now - t < config.rateWindowMs);
+    if (recent.length >= config.rateMax) return tooManyRequests(res);
+    recent.push(now);
+    hits.set(key, recent);
+    if (hits.size > 10000) hits.clear();
+    next();
+  };
+
   app.get('/health', (req, res) => {
     res.json({
       success: true,
@@ -43,7 +61,7 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     });
   });
 
-  app.get('/zoom-design/memory/:projectId', requireToken, async (req, res) => {
+  app.get('/zoom-design/memory/:projectId', rateLimit, requireToken, async (req, res) => {
     let record;
     try {
       record = await memory.get(req.params.projectId);
@@ -57,7 +75,7 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     res.json({ success: true, memory: record });
   });
 
-  app.post('/zoom-design/brain', requireToken, async (req, res) => {
+  app.post('/zoom-design/brain', rateLimit, requireToken, async (req, res) => {
     const validated = validateRequest(req.body || {});
     if (!validated.valid) {
       return res.status(validated.httpStatus).json(validated.errorBody);

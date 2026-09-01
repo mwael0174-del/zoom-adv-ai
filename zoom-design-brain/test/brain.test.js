@@ -8,10 +8,17 @@ import { MemoryStore } from '../src/memory.js';
 import { validateRequest, normalizeInput } from '../src/validate.js';
 import { buildPrompts, mergeMemory } from '../src/prompt.js';
 
-const config = { apiKey: 'test-key', model: 'gpt-4o-mini', maxTokens: 100, timeoutMs: 1000 };
+const config = {
+  apiKey: 'test-key',
+  model: 'gpt-4o-mini',
+  maxTokens: 100,
+  timeoutMs: 1000,
+  rateWindowMs: 60000,
+  rateMax: 1000,
+};
 
-async function withServer(t, { ai, memory }) {
-  const app = createApp({ memory, ai, config });
+async function withServer(t, { ai, memory, overrides = {} }) {
+  const app = createApp({ memory, ai, config: { ...config, ...overrides } });
   const server = app.listen(0);
   await new Promise((resolve) => server.once('listening', resolve));
   t.after(() => new Promise((resolve) => server.close(resolve)));
@@ -163,14 +170,46 @@ test('a __proto__ project id does not pollute stored records', async (t) => {
 
 test('requests are rejected without the configured token', async (t) => {
   const memory = await tmpStore(t);
-  const app = createApp({ memory, ai: async () => 'رد', config: { ...config, authToken: 'secret' } });
-  const server = app.listen(0);
-  await new Promise((resolve) => server.once('listening', resolve));
-  t.after(() => new Promise((resolve) => server.close(resolve)));
-  const base = `http://127.0.0.1:${server.address().port}`;
+  const base = await withServer(t, { memory, ai: async () => 'رد', overrides: { authToken: 'secret' } });
 
   assert.equal((await post(base, { action: 'chat', message: 'hi' })).status, 401);
   assert.equal((await post(base, { action: 'chat', message: 'hi' }, { authorization: 'Bearer secret' })).status, 200);
+});
+
+test('overlapping updates for two projects both persist', async (t) => {
+  const memory = await tmpStore(t);
+  const release = {};
+  const gate = (id) => new Promise((resolve) => (release[id] = resolve));
+  const base = await withServer(t, {
+    memory,
+    ai: async ({ userPrompt }) => {
+      await gate(userPrompt.includes('a1') ? 'a' : 'b');
+      return 'رد';
+    },
+  });
+
+  const first = post(base, { action: 'chat', message: 'a1', context: { projectId: 'pa' } });
+  const second = post(base, { action: 'chat', message: 'b1', context: { projectId: 'pb' } });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  release.a();
+  release.b();
+  await Promise.all([first, second]);
+
+  assert.ok(await memory.get('pa'));
+  assert.ok(await memory.get('pb'));
+});
+
+test('rate limit returns 429 once the window budget is spent', async (t) => {
+  const base = await withServer(t, {
+    memory: await tmpStore(t),
+    ai: async () => 'رد',
+    overrides: { rateMax: 2 },
+  });
+  assert.equal((await post(base, { action: 'chat', message: 'hi' })).status, 200);
+  assert.equal((await post(base, { action: 'chat', message: 'hi' })).status, 200);
+  const limited = await post(base, { action: 'chat', message: 'hi' });
+  assert.equal(limited.status, 429);
+  assert.equal((await limited.json()).errorCode, 'RATE_LIMITED');
 });
 
 test('memory keeps previous values when new context is empty', () => {

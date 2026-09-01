@@ -15,7 +15,8 @@ export class MemoryCorruptedError extends Error {
 export class MemoryStore {
   constructor(filePath) {
     this.filePath = filePath;
-    this.locks = new Map();
+    this.writeQueue = Promise.resolve();
+    this.tmpCounter = 0;
   }
 
   async readAll() {
@@ -42,20 +43,16 @@ export class MemoryStore {
   }
 
   /**
-   * يقفل المشروع أثناء دورة read-modify-write، فالمشاريع التانية ما تتأثرش.
+   * دورة read-modify-write كاملة متسلسلة على مستوى الملف المشترك،
+   * فمفيش تحديث بيمسح تحديث مشروع تاني. نداءات الـ AI بتفضل برّه القفل.
    * @param {string} projectId
    * @param {(current: object|null) => object|Promise<object>} buildFields
    */
   async update(projectId, buildFields) {
     if (!projectId) return null;
-    const previous = this.locks.get(projectId) || Promise.resolve();
-    const run = previous.catch(() => {}).then(() => this.#applyUpdate(projectId, buildFields));
-    this.locks.set(projectId, run);
-    try {
-      return await run;
-    } finally {
-      if (this.locks.get(projectId) === run) this.locks.delete(projectId);
-    }
+    const run = this.writeQueue.catch(() => {}).then(() => this.#applyUpdate(projectId, buildFields));
+    this.writeQueue = run.catch(() => {});
+    return run;
   }
 
   async #applyUpdate(projectId, buildFields) {
@@ -72,7 +69,7 @@ export class MemoryStore {
     Object.defineProperty(next, projectId, { value: record, enumerable: true, writable: true, configurable: true });
 
     await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-    const tmpPath = `${this.filePath}.${process.pid}.tmp`;
+    const tmpPath = `${this.filePath}.${process.pid}.${this.tmpCounter++}.tmp`;
     await fs.writeFile(tmpPath, JSON.stringify(next, null, 2), 'utf8');
     await fs.rename(tmpPath, this.filePath); // كتابة ذرية: الملف الأصلي يفضل سليم لو حصل انقطاع
     return record;
