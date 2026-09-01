@@ -1,34 +1,72 @@
+/**
+ * Updated Campaigns Page
+ * صفحة الحملات المحدثة مع استخدام Zustand و Validation
+ */
+
 import { useState } from 'react';
-import { useCampaigns } from '../context/CampaignsContext';
-import { PLATFORMS } from '../store/campaignsStore';
+import { useCampaigns } from '../hooks/useCampaigns';
+import { useUIStore } from '../store/useUIStore';
+import { campaignFormSchema } from '../schemas/campaign.schema';
 import Badge from '../components/ui/Badge';
 import ProgressBar from '../components/ui/ProgressBar';
 import './Campaigns.css';
 
-const EMPTY_FORM = { name: '', platform: PLATFORMS[0], budget: '' };
+const EMPTY_FORM = { name: '', platform: 'Facebook' as const, budget: '' };
 
 export default function Campaigns() {
-  const { campaigns, addCampaign, updateStatus, deleteCampaign } = useCampaigns();
-  const [showForm, setShowForm] = useState(false);
+  const {
+    campaigns,
+    loading,
+    showForm,
+    handleAddCampaign,
+    handleDeleteCampaign,
+    handleUpdateStatus,
+    toggleForm,
+  } = useCampaigns();
+
+  const { showDeleteConfirm, setDeleteConfirm } = useUIStore();
   const [form, setForm] = useState(EMPTY_FORM);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); // id الحملة المراد حذفها
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name.trim() || !form.budget) return;
-    addCampaign({ name: form.name, platform: form.platform, budget: Number(form.budget) });
-    setForm(EMPTY_FORM);
-    setShowForm(false);
+    setFormErrors({});
+
+    // التحقق من البيانات
+    const validation = campaignFormSchema.safeParse({
+      name: form.name,
+      platform: form.platform,
+      budget: Number(form.budget),
+    });
+
+    if (!validation.success) {
+      validation.error.errors.forEach((err) => {
+        const path = err.path.join('.');
+        setFormErrors((prev) => ({
+          ...prev,
+          [path]: err.message,
+        }));
+      });
+      return;
+    }
+
+    const success = await handleAddCampaign(validation.data);
+    if (success) {
+      setForm(EMPTY_FORM);
+      setFormErrors({});
+    }
   };
 
-  const handleToggle = (id, current) => {
-    updateStatus(id, current === 'active' ? 'paused' : 'active');
+  const handleToggle = (id: number, current: string) => {
+    handleUpdateStatus(
+      id,
+      current === 'active' ? 'paused' : 'active'
+    );
   };
 
-  const handleDelete = (id) => {
-    if (deleteConfirm === id) {
-      deleteCampaign(id);
-      setDeleteConfirm(null);
+  const handleDelete = (id: number) => {
+    if (showDeleteConfirm === id) {
+      handleDeleteCampaign(id);
     } else {
       setDeleteConfirm(id);
     }
@@ -44,7 +82,8 @@ export default function Campaigns() {
         <button
           type="button"
           className="btn btn-primary"
-          onClick={() => { setShowForm(!showForm); setForm(EMPTY_FORM); }}
+          onClick={toggleForm}
+          disabled={loading}
         >
           {showForm ? '× إلغاء' : '+ حملة جديدة'}
         </button>
@@ -60,15 +99,27 @@ export default function Campaigns() {
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
                 placeholder="مثال: حملة Black Friday"
                 required
+                className={formErrors.name ? 'error' : ''}
               />
+              {formErrors.name && (
+                <span className="error-message">{formErrors.name}</span>
+              )}
             </label>
             <label>
               المنصة
               <select
                 value={form.platform}
-                onChange={(e) => setForm({ ...form, platform: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    platform: e.target.value as any,
+                  })
+                }
               >
-                {PLATFORMS.map((p) => <option key={p} value={p}>{p}</option>)}
+                <option value="Facebook">Facebook</option>
+                <option value="Google">Google</option>
+                <option value="Instagram">Instagram</option>
+                <option value="TikTok">TikTok</option>
               </select>
             </label>
             <label>
@@ -80,16 +131,33 @@ export default function Campaigns() {
                 onChange={(e) => setForm({ ...form, budget: e.target.value })}
                 placeholder="5000"
                 required
+                className={formErrors.budget ? 'error' : ''}
               />
+              {formErrors.budget && (
+                <span className="error-message">{formErrors.budget}</span>
+              )}
             </label>
           </div>
-          <button type="submit" className="btn btn-primary">إنشاء الحملة</button>
+          <button
+            type="submit"
+            className="btn btn-primary"
+            disabled={loading}
+          >
+            {loading ? 'جاري الإنشاء...' : 'إنشاء الحملة'}
+          </button>
         </form>
       )}
 
       <div className="campaigns-list">
         {campaigns.length === 0 && (
-          <div className="card" style={{ textAlign: 'center', color: 'var(--text-muted)', padding: 40 }}>
+          <div
+            className="card"
+            style={{
+              textAlign: 'center',
+              color: 'var(--text-muted)',
+              padding: 40,
+            }}
+          >
             لا توجد حملات بعد. ابدأ بإنشاء حملتك الأولى!
           </div>
         )}
@@ -107,11 +175,15 @@ export default function Campaigns() {
             <div className="campaign-stats">
               <div>
                 <span className="cs-label">الميزانية</span>
-                <span className="cs-val">{c.budget.toLocaleString('ar-EG')} ج.م</span>
+                <span className="cs-val">
+                  {c.budget.toLocaleString('ar-EG')} ج.م
+                </span>
               </div>
               <div>
                 <span className="cs-label">المصروف</span>
-                <span className="cs-val">{c.spent.toLocaleString('ar-EG')} ج.م</span>
+                <span className="cs-val">
+                  {c.spent.toLocaleString('ar-EG')} ج.م
+                </span>
               </div>
               <div>
                 <span className="cs-label">CTR</span>
@@ -129,17 +201,21 @@ export default function Campaigns() {
                   type="button"
                   className="btn btn-ghost campaign-toggle"
                   onClick={() => handleToggle(c.id, c.status)}
+                  disabled={loading}
                 >
                   {c.status === 'active' ? '⏸ إيقاف مؤقت' : '▶ تشغيل'}
                 </button>
               )}
               <button
                 type="button"
-                className={`btn campaign-delete ${deleteConfirm === c.id ? 'btn-danger' : 'btn-ghost'}`}
+                className={`btn campaign-delete ${
+                  showDeleteConfirm === c.id ? 'btn-danger' : 'btn-ghost'
+                }`}
                 onClick={() => handleDelete(c.id)}
                 title="حذف الحملة"
+                disabled={loading}
               >
-                {deleteConfirm === c.id ? 'تأكيد الحذف؟' : '🗑 حذف'}
+                {showDeleteConfirm === c.id ? 'تأكيد الحذف؟' : '🗑 حذف'}
               </button>
             </div>
           </div>
