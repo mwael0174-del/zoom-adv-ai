@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ZOOM DESIGN BRAIN</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>ZOOM DESIGN BRAIN</h1>
+      <p>العقل الاصطناعي لتصميم اللافتات وواجهات المحلات</p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>سياق المشروع</h2>
+        <label>Project ID <input id="projectId" placeholder="zd-001" /></label>
+        <label>اسم المشروع <input id="projectName" placeholder="محل موبيليا" /></label>
+        <label>العميل <input id="clientName" /></label>
+        <label>التصنيف <input id="category" placeholder="Shopfront" /></label>
+        <label>الأبعاد <input id="dimensions" placeholder="6م × 3م" /></label>
+        <label>الخامات (مفصولة بفاصلة) <input id="materials" placeholder="ACP, Acrylic" /></label>
+        <label>الألوان (مفصولة بفاصلة) <input id="colors" placeholder="أسود, ذهبي" /></label>
+        <label>الاستايل <input id="style" placeholder="Modern Luxury" /></label>
+        <label>المتطلبات (مفصولة بفاصلة) <input id="requirements" /></label>
+        <label>ملاحظات (مفصولة بفاصلة) <input id="notes" /></label>
+        <label>اللغة
+          <select id="language">
+            <option value="ar-EG">ar-EG</option>
+            <option value="en">en</option>
+          </select>
+        </label>
+        <label>API Token (لو السيرفر مضبوط عليه) <input id="token" type="password" autocomplete="off" /></label>
+        <button id="loadMemory" type="button" class="ghost">تحميل ذاكرة المشروع</button>
+        <pre id="memoryView" class="memory"></pre>
+      </section>
+
+      <section class="panel wide">
+        <h2>الطلب</h2>
+        <label>الإجراء
+          <select id="action">
+            <option value="chat">chat — محادثة عامة</option>
+            <option value="design_brief">design_brief — بريف تصميم</option>
+            <option value="creative_direction">creative_direction — اتجاه إبداعي</option>
+            <option value="generate_prompt">generate_prompt — برومبت صورة</option>
+            <option value="shopfront_idea">shopfront_idea — فكرة واجهة</option>
+            <option value="signage_idea">signage_idea — فكرة لافتة</option>
+            <option value="material_suggestions">material_suggestions — اقتراح خامات</option>
+            <option value="client_brief">client_brief — بريف عميل</option>
+          </select>
+        </label>
+        <label>رسالتك <textarea id="message" rows="5" placeholder="اكتب طلبك هنا..."></textarea></label>
+        <button id="send" type="button">إرسال</button>
+        <div id="status" class="status"></div>
+        <pre id="output" class="output"></pre>
+      </section>
+    </main>
+
+    <script src="app.js"></script>
+  </body>
+</html>
