@@ -212,6 +212,18 @@ test('rate limit returns 429 once the window budget is spent', async (t) => {
   assert.equal((await limited.json()).errorCode, 'RATE_LIMITED');
 });
 
+test('rejected tokens do not consume the rate budget', async (t) => {
+  const base = await withServer(t, {
+    memory: await tmpStore(t),
+    ai: async () => 'رد',
+    overrides: { authToken: 'secret', rateMax: 1 },
+  });
+  for (let i = 0; i < 3; i += 1) {
+    assert.equal((await post(base, { action: 'chat', message: 'hi' }, { authorization: 'Bearer wrong' })).status, 401);
+  }
+  assert.equal((await post(base, { action: 'chat', message: 'hi' }, { authorization: 'Bearer secret' })).status, 200);
+});
+
 test('memory keeps previous values when new context is empty', () => {
   const merged = mergeMemory({ colors: [], materials: ['ACP'] }, { colors: 'أحمر', materials: 'Acrylic' }, 'نص');
   assert.equal(merged.colors, 'أحمر');

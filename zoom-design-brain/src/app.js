@@ -38,7 +38,7 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     next();
   };
 
-  // حد بسيط للطلبات لكل IP: يمنع استنزاف كوتا الـ AI وتضخم ملف الذاكرة.
+  // حد بسيط للطلبات لكل IP، بيتطبق بعد التحقق من التوكن عشان الطلبات المرفوضة ما تاكلش رصيد العملاء.
   const hits = new Map();
   const rateLimit = (req, res, next) => {
     const now = Date.now();
@@ -61,7 +61,7 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     });
   });
 
-  app.get('/zoom-design/memory/:projectId', rateLimit, requireToken, async (req, res) => {
+  app.get('/zoom-design/memory/:projectId', requireToken, rateLimit, async (req, res) => {
     let record;
     try {
       record = await memory.get(req.params.projectId);
@@ -75,7 +75,7 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     res.json({ success: true, memory: record });
   });
 
-  app.post('/zoom-design/brain', rateLimit, requireToken, async (req, res) => {
+  app.post('/zoom-design/brain', requireToken, rateLimit, async (req, res) => {
     const validated = validateRequest(req.body || {});
     if (!validated.valid) {
       return res.status(validated.httpStatus).json(validated.errorBody);
