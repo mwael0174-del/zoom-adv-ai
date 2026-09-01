@@ -21,6 +21,14 @@ function readContext() {
   };
 }
 
+const TOKEN_KEY = 'zoom_design_brain_token';
+
+function authHeaders() {
+  const token = $('token').value.trim();
+  localStorage.setItem(TOKEN_KEY, token);
+  return token ? { authorization: `Bearer ${token}` } : {};
+}
+
 function setStatus(text, isError) {
   const el = $('status');
   el.textContent = text;
@@ -38,7 +46,7 @@ async function send() {
   try {
     const res = await fetch('/zoom-design/brain', {
       method: 'POST',
-      headers: { 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json', ...authHeaders() },
       body: JSON.stringify({
         action: $('action').value,
         message,
@@ -67,13 +75,14 @@ async function loadMemory(silent) {
     if (!silent) setStatus('اكتب Project ID الأول.', true);
     return;
   }
-  const res = await fetch(`/zoom-design/memory/${encodeURIComponent(projectId)}`);
+  const res = await fetch(`/zoom-design/memory/${encodeURIComponent(projectId)}`, { headers: authHeaders() });
   const data = await res.json();
   $('memoryView').textContent = data.success
     ? JSON.stringify(data.memory, null, 2)
     : 'مفيش ذاكرة محفوظة للمشروع ده.';
 }
 
+$('token').value = localStorage.getItem(TOKEN_KEY) || '';
 $('send').addEventListener('click', send);
 $('loadMemory').addEventListener('click', () => loadMemory(false));
 $('message').addEventListener('keydown', (e) => {

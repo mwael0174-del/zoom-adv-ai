@@ -19,6 +19,7 @@ npm start        # http://localhost:3000
 | `OPENAI_TIMEOUT_MS` | `60000` | مهلة الطلب |
 | `PORT` | `3000` | بورت السيرفر |
 | `MEMORY_FILE` | `data/memory.json` | ملف ذاكرة المشاريع |
+| `BRAIN_API_TOKEN` | — | لو مضبوط، كل نداءات الـ API تتطلب `Authorization: Bearer <token>` (اكتبه في خانة API Token في الواجهة) |
 
 ## الـ API
 

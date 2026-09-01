@@ -17,9 +17,8 @@ export async function callOpenAI({ systemPrompt, userPrompt, apiKey, model, maxT
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
 
-  let res;
   try {
-    res = await fetch(`${baseUrl || DEFAULT_BASE_URL}/chat/completions`, {
+    const res = await fetch(`${baseUrl || DEFAULT_BASE_URL}/chat/completions`, {
       method: 'POST',
       headers: {
         'content-type': 'application/json',
@@ -35,20 +34,22 @@ export async function callOpenAI({ systemPrompt, userPrompt, apiKey, model, maxT
       }),
       signal: controller.signal,
     });
+
+    // المهلة فاضلة شغالة لحد ما الـ body يتقرأ بالكامل، عشان body واقف ما يعلّقش الطلب.
+    if (!res.ok) {
+      const detail = await res.text().catch(() => '');
+      throw new OpenAIError(`OpenAI responded ${res.status}: ${detail.slice(0, 300)}`, {
+        timeout: res.status === 504 || res.status === 408,
+      });
+    }
+
+    const data = await res.json();
+    return data?.choices?.[0]?.message?.content || '';
   } catch (err) {
+    if (err instanceof OpenAIError) throw err;
     if (err.name === 'AbortError') throw new OpenAIError('OpenAI request timed out', { timeout: true });
     throw new OpenAIError(err.message);
   } finally {
     clearTimeout(timer);
   }
-
-  if (!res.ok) {
-    const detail = await res.text().catch(() => '');
-    throw new OpenAIError(`OpenAI responded ${res.status}: ${detail.slice(0, 300)}`, {
-      timeout: res.status === 504 || res.status === 408,
-    });
-  }
-
-  const data = await res.json();
-  return data?.choices?.[0]?.message?.content || '';
 }

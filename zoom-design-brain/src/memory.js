@@ -1,6 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+export class MemoryCorruptedError extends Error {
+  constructor(filePath) {
+    super(`memory file is not valid JSON: ${filePath}`);
+    this.name = 'MemoryCorruptedError';
+  }
+}
+
 /**
  * مخزن ذاكرة المشاريع — بديل الـ Data Table في n8n.
  * ملف JSON واحد: { [project_id]: { project_id, colors, materials, ... } }
@@ -8,42 +15,66 @@ import path from 'node:path';
 export class MemoryStore {
   constructor(filePath) {
     this.filePath = filePath;
-    this.queue = Promise.resolve();
+    this.locks = new Map();
   }
 
   async readAll() {
+    let raw;
     try {
-      const raw = await fs.readFile(this.filePath, 'utf8');
+      raw = await fs.readFile(this.filePath, 'utf8');
+    } catch (err) {
+      if (err.code === 'ENOENT') return {};
+      throw err;
+    }
+    try {
       const parsed = JSON.parse(raw);
       return parsed && typeof parsed === 'object' ? parsed : {};
-    } catch (err) {
-      if (err.code === 'ENOENT' || err instanceof SyntaxError) return {};
-      throw err;
+    } catch {
+      // لا نعتبر الملف التالف فاضي، عشان الكتابة اللي بعدها ما تمسحش السجلات.
+      throw new MemoryCorruptedError(this.filePath);
     }
   }
 
   async get(projectId) {
     if (!projectId) return null;
     const all = await this.readAll();
-    return all[projectId] || null;
+    return Object.hasOwn(all, projectId) ? all[projectId] : null;
   }
 
-  async upsert(projectId, fields) {
+  /**
+   * يقفل المشروع أثناء دورة read-modify-write، فالمشاريع التانية ما تتأثرش.
+   * @param {string} projectId
+   * @param {(current: object|null) => object|Promise<object>} buildFields
+   */
+  async update(projectId, buildFields) {
     if (!projectId) return null;
-    const run = async () => {
-      const all = await this.readAll();
-      const record = {
-        ...(all[projectId] || {}),
-        ...fields,
-        project_id: projectId,
-        updated_at: new Date().toISOString(),
-      };
-      all[projectId] = record;
-      await fs.mkdir(path.dirname(this.filePath), { recursive: true });
-      await fs.writeFile(this.filePath, JSON.stringify(all, null, 2), 'utf8');
-      return record;
+    const previous = this.locks.get(projectId) || Promise.resolve();
+    const run = previous.catch(() => {}).then(() => this.#applyUpdate(projectId, buildFields));
+    this.locks.set(projectId, run);
+    try {
+      return await run;
+    } finally {
+      if (this.locks.get(projectId) === run) this.locks.delete(projectId);
+    }
+  }
+
+  async #applyUpdate(projectId, buildFields) {
+    const all = await this.readAll();
+    const current = Object.hasOwn(all, projectId) ? all[projectId] : null;
+    const record = {
+      ...(current || {}),
+      ...(await buildFields(current)),
+      project_id: projectId,
+      updated_at: new Date().toISOString(),
     };
-    this.queue = this.queue.then(run, run);
-    return this.queue;
+
+    const next = { ...all };
+    Object.defineProperty(next, projectId, { value: record, enumerable: true, writable: true, configurable: true });
+
+    await fs.mkdir(path.dirname(this.filePath), { recursive: true });
+    const tmpPath = `${this.filePath}.${process.pid}.tmp`;
+    await fs.writeFile(tmpPath, JSON.stringify(next, null, 2), 'utf8');
+    await fs.rename(tmpPath, this.filePath); // كتابة ذرية: الملف الأصلي يفضل سليم لو حصل انقطاع
+    return record;
   }
 }

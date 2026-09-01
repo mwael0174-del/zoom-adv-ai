@@ -7,6 +7,12 @@ import { callOpenAI } from './openaiClient.js';
 
 const publicDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'public');
 
+const unauthorized = (res) =>
+  res.status(401).json({ success: false, errorCode: 'UNAUTHORIZED', message: 'مطلوب توكن صالح.' });
+
+const memoryError = (res) =>
+  res.status(500).json({ success: false, errorCode: 'MEMORY_ERROR', message: 'تعذر قراءة ذاكرة المشروع.' });
+
 /**
  * @param {object} deps
  * @param {import('./memory.js').MemoryStore} deps.memory
@@ -18,17 +24,40 @@ export function createApp({ memory, ai = callOpenAI, config }) {
   app.use(express.json({ limit: '1mb' }));
   app.use(express.static(publicDir));
 
+  // لما يكون BRAIN_API_TOKEN مضبوط، كل نداءات الـ API تتطلب التوكن ده.
+  const requireToken = (req, res, next) => {
+    if (!config.authToken) return next();
+    const header = req.get('authorization') || '';
+    const provided = header.startsWith('Bearer ') ? header.slice(7) : '';
+    if (provided !== config.authToken) return unauthorized(res);
+    next();
+  };
+
   app.get('/health', (req, res) => {
-    res.json({ success: true, actions: SUPPORTED_ACTIONS, model: config.model, aiConfigured: !!config.apiKey });
+    res.json({
+      success: true,
+      actions: SUPPORTED_ACTIONS,
+      model: config.model,
+      aiConfigured: !!config.apiKey,
+      authRequired: !!config.authToken,
+    });
   });
 
-  app.get('/zoom-design/memory/:projectId', async (req, res) => {
-    const record = await memory.get(req.params.projectId);
-    if (!record) return res.status(404).json({ success: false, errorCode: 'NOT_FOUND', message: 'مفيش ذاكرة للمشروع ده.' });
+  app.get('/zoom-design/memory/:projectId', requireToken, async (req, res) => {
+    let record;
+    try {
+      record = await memory.get(req.params.projectId);
+    } catch (err) {
+      console.error('memory read failed:', err.message);
+      return memoryError(res);
+    }
+    if (!record) {
+      return res.status(404).json({ success: false, errorCode: 'NOT_FOUND', message: 'مفيش ذاكرة للمشروع ده.' });
+    }
     res.json({ success: true, memory: record });
   });
 
-  app.post('/zoom-design/brain', async (req, res) => {
+  app.post('/zoom-design/brain', requireToken, async (req, res) => {
     const validated = validateRequest(req.body || {});
     if (!validated.valid) {
       return res.status(validated.httpStatus).json(validated.errorBody);
@@ -40,8 +69,8 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     let stored = null;
     try {
       stored = await memory.get(projectId);
-    } catch {
-      stored = null; // الذاكرة اختيارية — زي onError: continueRegularOutput في n8n
+    } catch (err) {
+      console.error('memory read failed:', err.message); // الذاكرة اختيارية — زي onError: continueRegularOutput
     }
 
     const prompts = buildPrompts(normalized, stored);
@@ -69,11 +98,14 @@ export function createApp({ memory, ai = callOpenAI, config }) {
     }
 
     if (projectId) {
-      const merged = mergeMemory(normalized.context, stored, aiText);
       try {
-        await memory.upsert(projectId, { ...merged, last_action: normalized.action });
+        // الدمج بيتم جوه القفل عشان طلبين على نفس المشروع ما يمسحوش بعض.
+        await memory.update(projectId, (current) => ({
+          ...mergeMemory(normalized.context, current, aiText),
+          last_action: normalized.action,
+        }));
       } catch (err) {
-        console.error('memory upsert failed:', err.message);
+        console.error('memory update failed:', err.message);
       }
     }
 

@@ -24,10 +24,10 @@ async function tmpStore(t) {
   return new MemoryStore(path.join(dir, 'memory.json'));
 }
 
-const post = (base, body) =>
+const post = (base, body, headers = {}) =>
   fetch(`${base}/zoom-design/brain`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: { 'content-type': 'application/json', ...headers },
     body: JSON.stringify(body),
   });
 
@@ -105,12 +105,72 @@ test('persists project memory and feeds it into the next prompt', async (t) => {
   assert.equal(stored.summary, 'ملخص الرد');
 
   await post(base, { action: 'chat', message: 'كمل', context: { projectId: 'p1' } });
+
   assert.match(prompts[1], /ذاكرة المشروع السابقة/);
   assert.match(prompts[1], /أسود/);
 
   const other = await post(base, { action: 'chat', message: 'مشروع تاني', context: { projectId: 'p2' } });
   assert.equal(other.status, 200);
   assert.match(prompts[2], /لا توجد ذاكرة سابقة/);
+});
+
+test('concurrent requests for one project keep both updates', async (t) => {
+  const memory = await tmpStore(t);
+  const release = {};
+  const gate = (id) => new Promise((resolve) => (release[id] = resolve));
+  const base = await withServer(t, {
+    memory,
+    ai: async ({ userPrompt }) => {
+      await gate(userPrompt.includes('أحمر') ? 'a' : 'b');
+      return 'رد';
+    },
+  });
+
+  const first = post(base, { action: 'chat', message: 'x', context: { projectId: 'p', colors: ['أحمر'] } });
+  const second = post(base, { action: 'chat', message: 'y', context: { projectId: 'p', materials: ['ACP'] } });
+  await new Promise((resolve) => setTimeout(resolve, 20));
+  release.a();
+  release.b();
+  await Promise.all([first, second]);
+
+  const stored = await memory.get('p');
+  assert.equal(stored.colors, 'أحمر');
+  assert.equal(stored.materials, 'ACP');
+});
+
+test('a corrupted memory file is never silently overwritten', async (t) => {
+  const memory = await tmpStore(t);
+  await memory.update('p1', () => ({ colors: 'أزرق' }));
+  await fs.writeFile(memory.filePath, '{"p1": {', 'utf8');
+
+  const base = await withServer(t, { memory, ai: async () => 'رد' });
+  const memRes = await fetch(`${base}/zoom-design/memory/p1`);
+  assert.equal(memRes.status, 500);
+  assert.equal((await memRes.json()).errorCode, 'MEMORY_ERROR');
+
+  const res = await post(base, { action: 'chat', message: 'hi', context: { projectId: 'p1' } });
+  assert.equal(res.status, 200); // الرد بيكمل، والملف التالف بيفضل زي ما هو
+  assert.equal(await fs.readFile(memory.filePath, 'utf8'), '{"p1": {');
+});
+
+test('a __proto__ project id does not pollute stored records', async (t) => {
+  const memory = await tmpStore(t);
+  await memory.update('__proto__', () => ({ colors: 'أسود' }));
+  assert.equal(await memory.get('polluted'), null);
+  assert.equal({}.colors, undefined);
+  assert.equal((await memory.get('__proto__')).colors, 'أسود');
+});
+
+test('requests are rejected without the configured token', async (t) => {
+  const memory = await tmpStore(t);
+  const app = createApp({ memory, ai: async () => 'رد', config: { ...config, authToken: 'secret' } });
+  const server = app.listen(0);
+  await new Promise((resolve) => server.once('listening', resolve));
+  t.after(() => new Promise((resolve) => server.close(resolve)));
+  const base = `http://127.0.0.1:${server.address().port}`;
+
+  assert.equal((await post(base, { action: 'chat', message: 'hi' })).status, 401);
+  assert.equal((await post(base, { action: 'chat', message: 'hi' }, { authorization: 'Bearer secret' })).status, 200);
 });
 
 test('memory keeps previous values when new context is empty', () => {
